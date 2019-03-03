@@ -35,7 +35,7 @@ static double collision(const std::vector<double>& observer, const std::vector<d
 	if ((angle <= max_a) && (angle >= min_a))
 	{
 		double distance = sqrt(pow((observer_[1] - target_[1]), 2.) + pow((observer_[0] - target_[0]), 2.));
-		if (distance <= view_radius) { return distance; }
+		if (distance <= view_radius) { distance; }
 	}
 	return -1.0;
 }

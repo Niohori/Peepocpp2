@@ -92,7 +92,7 @@ public:
 	std::map<std::string, bool> view;
 	bool is_an_ennemy;
 	bool is_food;
-	GenerativeModel generative_model;
+	std::unique_ptr<GenerativeModel> generative_model;
 	unsigned stomach;
 	unsigned bang;
 	double rotation;
@@ -105,6 +105,7 @@ public:
 public:
 	//functions
 	Peepo();
+	Peepo(const Peepo&);
 	Peepo(const std::string&, const PeepoNetwork&, const bool&,  std::vector<double>&, std::vector<Obstacle>&);
 	void assemble_obstacles(void);
 	void update();
@@ -123,6 +124,7 @@ private:
 public:
 	SensoryInputPeepo();
 	SensoryInputPeepo(const Peepo&);
+	std::unique_ptr<SensoryInput> clone() ;
 	void action(const std::string&, const std::vector<double>&);
 	std::vector<double> value(const std::string&);
 	static std::string get_quadrant(const std::string&);

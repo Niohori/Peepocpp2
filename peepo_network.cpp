@@ -391,10 +391,6 @@ void PeepoNetwork::remove_node(const std::string& node)
 std::vector<std::string>  PeepoNetwork::get_incoming_edges( std::string node)
 {
 	std::vector<std::string> incoming_edges;
-	/*std::cout << "****************************************************************************************************************" << std::endl;
-	std::cout << "Incoming nodes for " << node << std::endl;
-	for (auto e : edges) { std::cout << "(" <<  e[0] << ", " << e[1] << "), "; }
-	std::cout << "****************************************************************************************************************"<< std::endl;*/
 	for_each(edges.begin(), edges.end(), [node, &incoming_edges](std::vector<std::string> edge) {if (edge[1] == node) {incoming_edges.push_back(edge[0]); } });
 	std::sort(incoming_edges.begin(), incoming_edges.end());
 	return incoming_edges;

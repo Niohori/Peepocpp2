@@ -150,6 +150,7 @@ public:
 			if (isPlaying)
 			{
 				peepo.update();
+				obstacles = peepo.obstacles;
 				pos = peepo.pos;
 				peepo_angle = peepo.rotation;
 				// Move peepo
@@ -162,7 +163,7 @@ public:
 			{
 				window.draw(peepo_);
 
-				/*sf::Vertex edge_right[] =
+				sf::Vertex edge_right[] =
 				{
 					sf::Vertex(sf::Vector2f(pos[0], pos[1])),
 					sf::Vertex(sf::Vector2f(peepo.edge_right[0], peepo.edge_right[1]))
@@ -181,7 +182,7 @@ public:
 					sf::Vertex(sf::Vector2f(pos[0], pos[1])),
 					sf::Vertex(sf::Vector2f(peepo.edge_middle[0], peepo.edge_middle[1]))
 				};
-				window.draw(edge_middle, 2, sf::Lines);*/
+				window.draw(edge_middle, 2, sf::Lines);
 
 				for (auto obst : obstacles) {
 					window.draw(obst.shape);

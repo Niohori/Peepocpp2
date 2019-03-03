@@ -4,9 +4,9 @@
 GenerativeModel::GenerativeModel() {;} 
 
 
-GenerativeModel::GenerativeModel(const PeepoNetwork& a_peepo, const SensoryInput& a_sensory):
+GenerativeModel::GenerativeModel(PeepoNetwork& a_peepo, SensoryInput& a_sensory):
 	peepo_network(a_peepo),
-	sensory_input(a_sensory)
+	sensory_input(a_sensory.clone())
 {
 	bool ok = peepo_network.to_bayesian_network();
 };
@@ -14,13 +14,13 @@ GenerativeModel::GenerativeModel(const PeepoNetwork& a_peepo, const SensoryInput
 
 double GenerativeModel::process(void)
 {
-	double total_prediction_error_size = 0.0f;
+	double total_prediction_error_size = 0.0;
 	std::map<std::string, std::vector<double> > predic = predict();
 	for (auto node:predic) {
 		std::string node_name = node.first;
 		if (is_leaf(node_name)) {
 			std::vector<double> prediction = node.second;
-			std::vector<double> observation = sensory_input.value(node_name);
+			std::vector<double> observation = sensory_input->value(node_name);
 			std::vector<double> prediction_error = error_(prediction, observation);
 			double prediction_error_size = error_size(prediction, observation);
 			double precision_ = precision(prediction);
@@ -35,7 +35,6 @@ double GenerativeModel::process(void)
 
 std::map<std::string, std::vector<double> > GenerativeModel::predict(void)
 {
-	std::map<std::string, std::vector<double> > inference;
 	std::map<std::string, unsigned>   evidences = get_root_values();
 	return peepo_network.get_inference(evidences);
 }
@@ -94,7 +93,7 @@ void GenerativeModel::hypothesis_update(const std::string& node_name,
 		if (node == node_name) { is_action = true; break; }
 	}
 	if (is_action) {
-		sensory_input.action(node_name, prediction);
+		sensory_input->action(node_name, prediction);
 	}
 	else{
 		std::map<std::string, unsigned>   evidence;

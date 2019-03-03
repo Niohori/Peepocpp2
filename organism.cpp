@@ -12,15 +12,24 @@ SensoryInputPeepo::SensoryInputPeepo(const Peepo& peep) :
 }
 
 
+
+std::unique_ptr<SensoryInput> SensoryInputPeepo::clone()
+{
+
+	return std::make_unique<SensoryInputPeepo>(*this);
+
+}
+
+
 void SensoryInputPeepo::action(const std::string& node, const  std::vector<double>& prediction)
 {
 
 	if (std::max_element(prediction.begin(), prediction.end()) - prediction.begin() == 0)
 	{
-		peepo.motor.at(get_direction(node)) = false;
+		peepo.motor[get_direction(node)] = false;
 	}
 	else {
-		peepo.motor.at(get_direction(node)) = true;
+		peepo.motor[get_direction(node)] = true;
 	}
 }
 
@@ -28,7 +37,7 @@ void SensoryInputPeepo::action(const std::string& node, const  std::vector<doubl
 std::vector<double> SensoryInputPeepo::value(const std::string& name)
 {
 	if (name.find(VISION) != std::string::npos){
-		if (peepo.view.at(get_quadrant(name))) {
+		if (peepo.view[get_quadrant(name)]) {
 			return { 0.1,0.9 };
 		}
 		else {
@@ -36,7 +45,7 @@ std::vector<double> SensoryInputPeepo::value(const std::string& name)
 		}
 	}
 	if (name.find(MOTOR) != std::string::npos) {
-		if (peepo.motor.at(get_quadrant(name))) {
+		if (peepo.motor[get_direction(name)]) {
 			return { 0.1,0.9 };
 		}
 		else {
@@ -65,7 +74,7 @@ std::vector<double> SensoryInputPeepo::value(const std::string& name)
 
 std::string SensoryInputPeepo::get_quadrant(const std::string& name)
 {
-	std::string quad;
+	std::string quad = "0";
 	std::vector<std::string> quadrants = { "1","2","3","4","5","6" };
 	for (auto qd : quadrants)
 	{
@@ -81,7 +90,7 @@ std::string SensoryInputPeepo::get_direction(const std::string& name)
 	std::string direction;
 	for (auto dir : { LEFT, RIGHT })
 	{
-		if (name.find(dir)) { direction  = dir; break; }
+		if (name.find(dir)) { direction = dir; break; }
 	}
 	return direction;
 }
@@ -91,6 +100,9 @@ Peepo::Peepo()
 { ; }
 
 
+Peepo::Peepo(const Peepo&) { ; }
+
+
 Peepo::Peepo(const std::string& name_, const PeepoNetwork& network_, const bool& graphical_,
 	std::vector<double>& pos_, std::vector<Obstacle>& obstacles_) :
 	name(name_),
@@ -98,7 +110,7 @@ Peepo::Peepo(const std::string& name_, const PeepoNetwork& network_, const bool&
 	graphical(graphical_),
 	pos(pos_),
 	obstacles(obstacles_),
-	generative_model(GenerativeModel(network, SensoryInputPeepo(*this))),
+	
 	rotation(0.f),
 	stomach(0),
 	bang(0),
@@ -116,11 +128,15 @@ Peepo::Peepo(const std::string& name_, const PeepoNetwork& network_, const bool&
 	for (double angle = -30.0; angle < 30.0; angle += 10.0) {
 		sectors.push_back({ angle, angle + 10.0 });
 	}
+	SensoryInputPeepo sens(*this);
+	generative_model = std::make_unique<GenerativeModel>(network, sens);
 }
 
 void Peepo::update() 
 {
-	generative_model.process();
+	
+	double err = generative_model->process();
+	
 	// Move peepo
 	double factor1 = PEEPO_SPEED;// *delta_time;
 	pos[0] += std::cos(rotation) * factor1;
@@ -137,6 +153,7 @@ void Peepo::update()
 			rotation = 0.0;
 		}
 	}
+	
 	calculate_obstacles();
 	if (graphical) {
 
@@ -194,6 +211,7 @@ void Peepo::calculate_obstacles(void)
 		}
 		count++;
 	}
+	
 	//remove eaten food
 	if (to_remove >= 0) {
 		obstacles.erase(obstacles.begin() + to_remove);
@@ -226,10 +244,13 @@ void Peepo::calculate_obstacles(void)
 			}
 		}
 	}
+	
 	std::stringstream ss; //from <sstream>
 	ss << relevant_sector.index;
 	std::string only_true = ss.str();
-	view.at(only_true) = true;
+	if (only_true != "0") {
+		view[only_true] = true;
+	}
 	double sight_angle = 0.0;
 	if (only_true == "0") { sight_angle = rotation; }
 	if (only_true == "1") { sight_angle = rotation - 25.0 / 180.0*PI; }
