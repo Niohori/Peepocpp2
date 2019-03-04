@@ -197,6 +197,7 @@ void Peepo::calculate_obstacles(void)
 	//check if collision occured with food or ennemy
 	int to_remove = -1;
 	int count = 0;
+	/*
 	for (auto obst : obstacles) {
 		if (collision(pos, { obst.x, obst.y }, SIZE_OBST+SIZE_PEEPO))
 		{
@@ -215,7 +216,7 @@ void Peepo::calculate_obstacles(void)
 	//remove eaten food
 	if (to_remove >= 0) {
 		obstacles.erase(obstacles.begin() + to_remove);
-	}
+	}*/
 	//observations
 	double closest_distance = 10000.0;
 	relevant_sector.index = 0;
@@ -223,12 +224,27 @@ void Peepo::calculate_obstacles(void)
 		auto sector = sectors[index];
 		double lower_edge = sector[0];
 		double upper_edge = sector[1];
+		//to_remove = -1;
+		count = 0;
 		for (auto obstacle : obstacles) {
-			double is_collision = collision(pos, { obstacle.x, obstacle.y }, 
+			bool is_collision = collision(pos, { obstacle.x, obstacle.y }, 
 											rotation, lower_edge, upper_edge, PEEPO_RADIUS);
-			if (is_collision > 0.0) {
-				if (is_collision < closest_distance) {
-					closest_distance = is_collision;
+			//std::cout << rotation << std::endl;
+			if (is_collision) {
+				double distance  = sqrt(pow((obstacle.y- pos[1]), 2.) + pow((obstacle.x - pos[0]), 2.));
+				if (distance <= SIZE_PEEPO + SIZE_OBST) {
+					if (obstacle.type == "food") {
+						to_remove = count;
+						stomach++;
+					}
+					if (obstacle.type == "ennemy") {
+						//to_remove = count;
+						bang++;
+					}
+					//break;
+				}
+				if (distance > SIZE_PEEPO + SIZE_OBST && distance <= PEEPO_RADIUS) {
+					closest_distance = distance;
 					relevant_sector.index = index + 1;
 					relevant_sector.xy = { obstacle.x,obstacle.y };
 					relevant_sector.distance = closest_distance;
@@ -242,9 +258,14 @@ void Peepo::calculate_obstacles(void)
 					}
 				}
 			}
+			count++;
 		}
 	}
-	
+	//remove eaten food
+	if (to_remove >= 0) {
+		obstacles.erase(obstacles.begin() + to_remove);
+	}
+	//std::cout << relevant_sector.index << std::endl;
 	std::stringstream ss; //from <sstream>
 	ss << relevant_sector.index;
 	std::string only_true = ss.str();
