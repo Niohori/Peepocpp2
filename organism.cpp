@@ -5,7 +5,7 @@
 SensoryInputPeepo::SensoryInputPeepo() { ; }
 
 
-SensoryInputPeepo::SensoryInputPeepo(const Peepo& peep) :
+SensoryInputPeepo::SensoryInputPeepo(Peepo& peep) :
 	peepo(peep)
 {
 	;
@@ -23,7 +23,6 @@ std::unique_ptr<SensoryInput> SensoryInputPeepo::clone()
 
 void SensoryInputPeepo::action(const std::string& node, const  std::vector<double>& prediction)
 {
-
 	if (std::max_element(prediction.begin(), prediction.end()) - prediction.begin() == 0)
 	{
 		peepo.motor[get_direction(node)] = false;
@@ -126,10 +125,10 @@ Peepo::Peepo(const std::string& name_, const PeepoNetwork& network_, const bool&
 	view["5"] = false;
 	view["6"] = false;
 	for (double angle = -30.0; angle < 30.0; angle += 10.0) {
-		sectors.push_back({ angle, angle + 10.0 });
+		sectors.push_back({ angle*PI/180., (angle + 10.0)*PI/180.0 });
 	}
-	SensoryInputPeepo sens(*this);
-	generative_model = std::make_unique<GenerativeModel>(network, sens);
+	SensoryInputPeepo sensory_input(*this);
+	generative_model = std::make_unique<GenerativeModel>(network, sensory_input);
 }
 
 void Peepo::update() 
@@ -141,6 +140,7 @@ void Peepo::update()
 	double factor1 = PEEPO_SPEED;// *delta_time;
 	pos[0] += std::cos(rotation) * factor1;
 	pos[1] += std::sin(rotation) * factor1;
+	//std::cout << std::boolalpha << motor[LEFT] << " +  " << motor[RIGHT] << std::endl;
 	if (motor[LEFT]) {
 		rotation -= 10. / 180.*PI;
 		if (rotation < 0.0) {
@@ -241,7 +241,7 @@ void Peepo::calculate_obstacles(void)
 						//to_remove = count;
 						bang++;
 					}
-					//break;
+					break;
 				}
 				if (distance > SIZE_PEEPO + SIZE_OBST && distance <= PEEPO_RADIUS) {
 					closest_distance = distance;
@@ -256,6 +256,7 @@ void Peepo::calculate_obstacles(void)
 						is_an_ennemy = true;
 						is_food = false;
 					}
+					break;
 				}
 			}
 			count++;
@@ -265,7 +266,6 @@ void Peepo::calculate_obstacles(void)
 	if (to_remove >= 0) {
 		obstacles.erase(obstacles.begin() + to_remove);
 	}
-	//std::cout << relevant_sector.index << std::endl;
 	std::stringstream ss; //from <sstream>
 	ss << relevant_sector.index;
 	std::string only_true = ss.str();

@@ -59,11 +59,11 @@ double GenerativeModel::error_size(const std::vector<double>& pred, const std::v
 		std::cout << "Error in error size estimation (prediction and observation have different size." << std::endl;
 		std::cin.get();
 	}
-	double entropy = 0.f;
+	double entropy = 0.0;
 	for (int i = 0; i < pred.size(); i++) {
 		entropy += obs[i] * log(pred[i] / obs[i]);
 	}
-	return entropy;
+	return -entropy;
 }
 
 double GenerativeModel::precision(const std::vector<double>& pred)
@@ -90,6 +90,7 @@ void GenerativeModel::hypothesis_update(const std::string& node_name,
 {
 	bool is_action = false;
 	for(auto node: peepo_network.get_pro_nodes()){
+		
 		if (node == node_name) { is_action = true; break; }
 	}
 	if (is_action) {

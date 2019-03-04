@@ -8,12 +8,13 @@
 class GenerativeModel {
 private:
 	
-	std::unique_ptr<SensoryInput> sensory_input;
+	
 
 public:
 	PeepoNetwork peepo_network;
 	GenerativeModel();
 	GenerativeModel(PeepoNetwork&, SensoryInput&);
+	std::unique_ptr<SensoryInput> sensory_input;
 	double process(void);
 	std::map<std::string, std::vector<double> > predict(void);
 	std::vector<double> error_(const std::vector<double>&, const std::vector<double>&);

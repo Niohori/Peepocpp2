@@ -81,6 +81,7 @@ public:
 	std::string name;
 	PeepoNetwork network;
 	bool graphical;
+	//SensoryInputPeepo sensory_input;
 
 	std::vector<double> pos;
 	std::vector<double> edge_right;
@@ -123,7 +124,7 @@ private:
 
 public:
 	SensoryInputPeepo();
-	SensoryInputPeepo(const Peepo&);
+	SensoryInputPeepo(Peepo&);
 	std::unique_ptr<SensoryInput> clone() ;
 	void action(const std::string&, const std::vector<double>&);
 	std::vector<double> value(const std::string&);
