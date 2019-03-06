@@ -81,7 +81,7 @@ public:
 	std::string name;
 	PeepoNetwork network;
 	bool graphical;
-	//SensoryInputPeepo sensory_input;
+	std::shared_ptr<SensoryInput> sensory_input;
 
 	std::vector<double> pos;
 	std::vector<double> edge_right;
@@ -93,7 +93,7 @@ public:
 	std::map<std::string, bool> view;
 	bool is_an_ennemy;
 	bool is_food;
-	std::unique_ptr<GenerativeModel> generative_model;
+	std::shared_ptr<GenerativeModel> generative_model;
 	unsigned stomach;
 	unsigned bang;
 	double rotation;
@@ -120,13 +120,15 @@ public:
 class SensoryInputPeepo :public SensoryInput
 {
 private:
-	Peepo peepo;
+	//Peepo peepo;
 
 public:
+	Peepo peepo;
 	SensoryInputPeepo();
 	SensoryInputPeepo(Peepo&);
-	std::unique_ptr<SensoryInput> clone() ;
+	std::shared_ptr<SensoryInput> clone() ;
 	void action(const std::string&, const std::vector<double>&);
+	std::map<std::string, bool> get_motor();
 	std::vector<double> value(const std::string&);
 	static std::string get_quadrant(const std::string&);
 	static std::string get_direction(const std::string&);

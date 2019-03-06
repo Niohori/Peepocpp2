@@ -13,10 +13,10 @@ SensoryInputPeepo::SensoryInputPeepo(Peepo& peep) :
 
 
 
-std::unique_ptr<SensoryInput> SensoryInputPeepo::clone()
+std::shared_ptr<SensoryInput> SensoryInputPeepo::clone()
 {
 
-	return std::make_unique<SensoryInputPeepo>(*this);
+	return std::make_shared<SensoryInputPeepo>(*this);
 
 }
 
@@ -33,8 +33,16 @@ void SensoryInputPeepo::action(const std::string& node, const  std::vector<doubl
 }
 
 
+std::map<std::string, bool> SensoryInputPeepo::get_motor()
+{
+	return peepo.motor;
+}
+
+
+
 std::vector<double> SensoryInputPeepo::value(const std::string& name)
 {
+	//std::cout << "NAME + " << peepo.name << std::endl;
 	if (name.find(VISION) != std::string::npos){
 		if (peepo.view[get_quadrant(name)]) {
 			return { 0.1,0.9 };
@@ -77,7 +85,7 @@ std::string SensoryInputPeepo::get_quadrant(const std::string& name)
 	std::vector<std::string> quadrants = { "1","2","3","4","5","6" };
 	for (auto qd : quadrants)
 	{
-		if (name.find(qd)) { quad = qd; break; }
+		if (name.find(qd) != std::string::npos) { return qd; }
 	}
 	return quad;
 }
@@ -89,7 +97,7 @@ std::string SensoryInputPeepo::get_direction(const std::string& name)
 	std::string direction;
 	for (auto dir : { LEFT, RIGHT })
 	{
-		if (name.find(dir)) { direction = dir; break; }
+		if (name.find(dir) != std::string::npos) { return dir; }
 	}
 	return direction;
 }
@@ -99,7 +107,22 @@ Peepo::Peepo()
 { ; }
 
 
-Peepo::Peepo(const Peepo&) { ; }
+Peepo::Peepo(const Peepo& apeepo) { 
+//???
+	name = apeepo.name;
+	PeepoNetwork network(apeepo.network);
+	graphical = apeepo.graphical;
+	pos = apeepo.pos;
+	obstacles = apeepo.obstacles;
+
+	rotation = apeepo.rotation;
+	stomach = apeepo.stomach;
+	bang = apeepo.bang;
+	is_an_ennemy = apeepo.is_an_ennemy;
+	is_food = apeepo.is_food;
+	motor = apeepo.motor;
+	generative_model = apeepo.generative_model;
+	; }
 
 
 Peepo::Peepo(const std::string& name_, const PeepoNetwork& network_, const bool& graphical_,
@@ -110,7 +133,7 @@ Peepo::Peepo(const std::string& name_, const PeepoNetwork& network_, const bool&
 	pos(pos_),
 	obstacles(obstacles_),
 	
-	rotation(0.f),
+	rotation(0.0),
 	stomach(0),
 	bang(0),
 	is_an_ennemy(false),
@@ -127,20 +150,20 @@ Peepo::Peepo(const std::string& name_, const PeepoNetwork& network_, const bool&
 	for (double angle = -30.0; angle < 30.0; angle += 10.0) {
 		sectors.push_back({ angle*PI/180., (angle + 10.0)*PI/180.0 });
 	}
-	SensoryInputPeepo sensory_input(*this);
-	generative_model = std::make_unique<GenerativeModel>(network, sensory_input);
+	//SensoryInputPeepo sensory_input(*this);
+	SensoryInputPeepo sens_inp(*this);
+	sensory_input = sens_inp.clone();
+	generative_model = std::make_shared<GenerativeModel>(network, *sensory_input);
 }
 
 void Peepo::update() 
 {
 	
 	double err = generative_model->process();
-	
+	motor = generative_model->sensory_input->get_motor();
 	// Move peepo
-	double factor1 = PEEPO_SPEED;// *delta_time;
-	pos[0] += std::cos(rotation) * factor1;
-	pos[1] += std::sin(rotation) * factor1;
-	//std::cout << std::boolalpha << motor[LEFT] << " +  " << motor[RIGHT] << std::endl;
+	pos[0] += std::cos(rotation) * PEEPO_SPEED;
+	pos[1] += std::sin(rotation) * PEEPO_SPEED;
 	if (motor[LEFT]) {
 		rotation -= 10. / 180.*PI;
 		if (rotation < 0.0) {
@@ -197,26 +220,7 @@ void Peepo::calculate_obstacles(void)
 	//check if collision occured with food or ennemy
 	int to_remove = -1;
 	int count = 0;
-	/*
-	for (auto obst : obstacles) {
-		if (collision(pos, { obst.x, obst.y }, SIZE_OBST+SIZE_PEEPO))
-		{
-			if (obst.type == "food") {
-				to_remove = count;
-				stomach++;
-			}
-			if (obst.type == "ennemy") {
-				//to_remove = count;
-				bang++;
-			}
-		}
-		count++;
-	}
-	
-	//remove eaten food
-	if (to_remove >= 0) {
-		obstacles.erase(obstacles.begin() + to_remove);
-	}*/
+
 	//observations
 	double closest_distance = 10000.0;
 	relevant_sector.index = 0;
@@ -282,5 +286,4 @@ void Peepo::calculate_obstacles(void)
 	if (only_true == "6") { sight_angle = rotation + 25.0 / 180.0*PI; }
 	edge_middle = { pos[0] + relevant_sector.distance*std::cos(sight_angle),
 					pos[1] + relevant_sector.distance*std::sin(sight_angle) };
-
 }

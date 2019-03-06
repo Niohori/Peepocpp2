@@ -33,11 +33,14 @@ double GenerativeModel::process(void)
 	return total_prediction_error_size;
 };
 
+
 std::map<std::string, std::vector<double> > GenerativeModel::predict(void)
 {
 	std::map<std::string, unsigned>   evidences = get_root_values();
 	return peepo_network.get_inference(evidences);
 }
+
+
 
 std::vector<double> GenerativeModel::error_(const std::vector<double>& pred, const std::vector<double>& obs)
 {
@@ -68,7 +71,7 @@ double GenerativeModel::error_size(const std::vector<double>& pred, const std::v
 
 double GenerativeModel::precision(const std::vector<double>& pred)
 {
-	double entropy = 0.f;
+	double entropy = 0.0;
 	for (int i = 0; i < pred.size(); i++) {
 		entropy -=pred[i] * log2f(pred[i] );
 	}
@@ -100,11 +103,11 @@ void GenerativeModel::hypothesis_update(const std::string& node_name,
 		std::map<std::string, unsigned>   evidence;
 		std::vector<double> sum = prediction_error;
 		std::transform(sum.begin(), sum.end(), prediction.begin(), sum.begin(), std::plus<double>());
-		evidence[node_name] = std::max_element(sum.begin(), sum.end()) - sum.begin();
+		evidence[node_name] =  std::max_element(sum.begin(), sum.end()) - sum.begin();
 		std::map<std::string, std::vector<double> > inference = peepo_network.get_inference(evidence);
 		for (auto root : get_roots()) {
 			//old_hypo = self.bayesian_network.states[root_index].distribution.items()--> ??
-			std::vector<double>  new_hypo = inference.at(root);
+			std::vector<double>  new_hypo = inference[root];
 			peepo_network.add_cpds(root, new_hypo);
 		}
 	bool ok = peepo_network.to_bayesian_network();//we need to refresh the bayesian newtork with the new cpds of the root
